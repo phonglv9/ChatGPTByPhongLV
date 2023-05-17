@@ -1,0 +1,116 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ChatGPTByPhongLV</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+ 
+
+</head>
+<body>
+    <section style="background-color: #eee; height:1000px !important">
+        <div class="container py-5">
+
+            <div class="row d-flex justify-content-center">
+                <div class="col-md-10 col-lg-8 col-xl-6">
+
+                    <div class="card" id="chat2">
+                        <div class="card-header d-flex justify-content-between align-items-center p-3">
+                            <h5 class="mb-0">ChatGPT Free</h5>
+                           
+                        </div>
+                        <div class="card-body" data-mdb-perfect-scrollbar="true" style="overflow:scroll; height: 500px" id="body-chatgpt">
+
+                            @RenderBody()
+
+                        </div>
+                        <div class="card-footer text-muted d-flex justify-content-start align-items-center p-3">
+                            <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava4-bg.webp"
+                                 alt="avatar 3" style="width: 40px; height: 100%;">
+                            <input type="text" class="form-control form-control-lg" id="txtQuestion"
+                                   placeholder="Type message">
+                            <a class="btn btn-lg btn-primary p-2" id="btnAsk">Send</a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </section>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $("#btnAsk").click(sendMessage);
+        $("#txtQuestion").keydown(function (event) {
+            if (event.keyCode === 13) { // Kiểm tra phím Enter
+                sendMessage();
+            }
+        });
+     
+        function sendMessage() {
+            var question = $("#txtQuestion").val();
+            if (question.trim() === "") {
+                return;
+            }
+
+            $('#body-chatgpt').append(`<div class="d-flex flex-row justify-content-end mb-4 pt-1">
+                                                    <div id="user-text">
+                                                          <p class="small p-2 me-3 mb-1 text-white rounded-3 bg-primary">${question}</p>
+                                                        </div>
+                                                    <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava4-bg.webp"
+                                                         alt="avatar 1" style="width: 45px; height: 100%;"></div>`
+
+            );
+            $("#txtQuestion").val('');
+            // Hiển thị dấu "..." trước khi nhận câu trả lời
+            $('#body-chatgpt').append(`<div class="d-flex flex-row justify-content-start">
+                                                <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava3-bg.webp"
+                                                        alt="avatar 1" style="width: 45px; height: 100%;">
+                                                <div id="user-chatgpt">
+                                                    <p class="small p-2 ms-3 mb-1 rounded-3" style="background-color: #f5f6f7;">
+                                                        <span class="typing-indicator" >Đang trả lời...</span>
+                                                    </p>
+                                                </div>
+                                            </div>`);
+            $.ajax({
+                url: "/Home/SendChatGPT",
+                type: "POST",
+                dataType: "json",
+                data: JSON.stringify(question),
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    // Xóa cả dòng chứa dấu "..." và ảnh
+                    $('#body-chatgpt').find('.typing-indicator').parent().parent().parent().remove();
+
+
+                    let html = `<div class="d-flex flex-row justify-content-start">
+                                        <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava3-bg.webp"
+                                                alt="avatar 1" style="width: 45px; height: 100%;">
+                                        <div id="user-chatgpt">
+                                                        <p class="small p-2 ms-3 mb-1 rounded-3" style="background-color: #f5f6f7;"> ${data.answer}</p>
+
+                                        </div>
+                                    </div>`;
+
+                    $('#body-chatgpt').append(html);
+
+
+                },
+                error: function (xhr, status, error) {
+                    console.log(error);
+                }
+            });
+
+          
+        }
+    });
+</script>
